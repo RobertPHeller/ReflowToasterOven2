@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source /home/heller/ReflowToasterOven2/ReflowToasterOven2.sch)
-    (date "Sun 24 Jun 2018 12:19:23 EDT")
+    (date "Tue 26 Jun 2018 08:46:07 EDT")
     (tool "eeschema (2013-june-11)-stable"))
   (components
     (comp (ref U1)
@@ -20,7 +20,7 @@
       (sheetpath (names /) (tstamps /))
       (tstamp 5B2FBC09))
     (comp (ref T1)
-      (value Thermocouple)
+      (value "+ Therm -")
       (libsource (lib conn) (part CONN_2))
       (sheetpath (names /) (tstamps /))
       (tstamp 5B2FBFCB))
@@ -207,10 +207,10 @@
   (libraries
     (library (logical device)
       (uri /usr/share/kicad/library/device.lib))
-    (library (logical aux)
-      (uri aux.lib))
     (library (logical conn)
       (uri /usr/share/kicad/library/conn.lib))
+    (library (logical aux)
+      (uri aux.lib))
     (library (logical feather_m0_express)
       (uri feather_m0_express.lib)))
   (nets

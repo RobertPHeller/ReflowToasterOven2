@@ -3,7 +3,7 @@
   (general
     (links 33)
     (no_connects 0)
-    (area 55.829999 91.349999 170.230001 137.210001)
+    (area 26.785994 89.31148 199.472126 139.38758)
     (thickness 1.6)
     (drawings 4)
     (tracks 1581)
@@ -432,7 +432,7 @@
     (fp_text reference T1 (at 0 -5.842) (layer F.SilkS)
       (effects (font (size 1.524 1.524) (thickness 0.3048)))
     )
-    (fp_text value Thermocouple (at 0 5.842) (layer F.SilkS)
+    (fp_text value "+ Therm -" (at 0 5.842) (layer F.SilkS)
       (effects (font (size 1.524 1.524) (thickness 0.3048)))
     )
     (fp_line (start 5.08 -3.81) (end 5.08 -4.572) (layer F.SilkS) (width 0.254))

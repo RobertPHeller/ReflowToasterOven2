@@ -38,7 +38,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "24 jun 2018"
+Date "26 jun 2018"
 Rev ""
 Comp ""
 Comment1 ""
@@ -195,7 +195,7 @@ L CONN_2 T1
 U 1 1 5B2FBFCB
 P 1050 4300
 F 0 "T1" V 1000 4300 40  0000 C CNN
-F 1 "Thermocouple" V 1100 4300 40  0000 C CNN
+F 1 "+ Therm -" V 1100 4300 40  0000 C CNN
 F 2 "~" H 1050 4300 60  0000 C CNN
 F 3 "~" H 1050 4300 60  0000 C CNN
 	1    1050 4300
