@@ -1,0 +1,80 @@
+Cmp-Mod V01 Created by CvPcb (2013-june-11)-stable date = Sun 24 Jun 2018 14:20:45 EDT
+
+BeginCmp
+TimeStamp = /5B2FBFE4;
+Reference = C1;
+ValeurCmp = .1 uf;
+IdModule  = C1;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FC378;
+Reference = C2;
+ValeurCmp = 47 uf;
+IdModule  = C1V7;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FBBEF;
+Reference = LCD1;
+ValeurCmp = 160X128_TFT_DISPLAY;
+IdModule  = pin_strip_10;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FC244;
+Reference = P1;
+ValeurCmp = Buzzer;
+IdModule  = pin_strip_2;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FC271;
+Reference = P2;
+ValeurCmp = Switches;
+IdModule  = pin_strip_4;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FC449;
+Reference = R1;
+ValeurCmp = 10K Ohms;
+IdModule  = R1;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FBFCB;
+Reference = T1;
+ValeurCmp = Thermocouple;
+IdModule  = mors_2p;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FC253;
+Reference = T2;
+ValeurCmp = 5V Power;
+IdModule  = ScrewTerm2.54-2;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FC262;
+Reference = T3;
+ValeurCmp = Relay;
+IdModule  = ScrewTerm2.54-2;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2F9A04;
+Reference = U1;
+ValeurCmp = FEATHER_M0_EXPRESS;
+IdModule  = AdafruitFeather;
+EndCmp
+
+BeginCmp
+TimeStamp = /5B2FBC09;
+Reference = U2;
+ValeurCmp = AD595AQ;
+IdModule  = DIP-14__300;
+EndCmp
+
+EndListe

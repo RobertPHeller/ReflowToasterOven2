@@ -1,0 +1,36 @@
+Drill report for /home/heller/ReflowToasterOven2/ReflowToasterOven2.kicad_pcb
+Created on Sun 24 Jun 2018 22:12:47 EDT
+Drill report for plated through holes :
+T1  0.64mm  0.025"  (812 holes)
+T2  0.81mm  0.032"  (20 holes)
+T3  1.00mm  0.039"  (16 holes)
+T4  1.02mm  0.040"  (32 holes)
+T5  1.25mm  0.049"  (2 holes)
+T6  2.50mm  0.098"  (4 holes)
+
+Total plated holes count 886
+
+
+Drill report for buried and blind vias :
+
+Drill report for holes from layer B.Cu to layer Inner1.Cu :
+
+Total plated holes count 0
+
+
+Drill report for holes from layer Inner1.Cu to layer Inner2.Cu :
+
+Total plated holes count 0
+
+
+Drill report for holes from layer Inner2.Cu to layer F.Cu :
+
+Total plated holes count 0
+
+
+Drill report for unplated through holes :
+T1  2.54mm  0.100"  (4 holes)
+
+Total unplated holes count 4
+
+

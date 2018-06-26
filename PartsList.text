@@ -1,0 +1,49 @@
+Mouser parts:
+
+On Board:
+
+1x: 47 uF Cap 140-REA470M1HBK0611P
+1x: .1 uF Cap 21RZ310-RC
+1x: 160X128_TFT_DISPLAY (header) 855-M20-9771046
+//1x: Switches (header) 855-M20-9730446
+//1x: Buzzer (header) 855-M20-9730246
+2x: 10K Ohms resistors 660-MS1/4DCT52R1002
+1x: Screw terminal Thermocouple 649-220316-H021B01LF
+2x: Screw terminals (Relay, FAN) 571-282834-2
+1x: AD595AQ 584-AD595AQ
+1x: Ciruit Board (BPS-MAR-BR1-001-2435) 854-BR1
+1x: 12 pos header socket 517-850-01-31 (cutable/breakable for both)
+1x: 16 pos header socket 
+
+Off Board:
+
+Mouser:
+
+1x: Solid State Relay (250VAC, 25A) 558-D2425
+1x: AC Power Entry Module (250V, 15A, No Fuse) 108-SK-015A
+1x: AC Power Cord 14AWG 686-17504
+1x: AC Receptacles 562-738W-X2/01
+2x: Plastic boxes  546-1591XXTSBK
+3x: Push button switches 642-MPB11102
+1x: Fan 490-CFM-4010V-070273
+2x: Connector2, 10-pin (for TFT_DISPLAY) 538-14-60-0101
+1x: Connector, 4-pin (for switches) 538-14-56-2041
+1x: Connector, 2-pin (for buzzer) 538-14-56-2021
+
+Adafruit:
+
+1x: Arduino Feather M0 Express
+1x: thermocouple 270
+1x: TFT Display breakout 618
+1x: Large Piezo 1739
+
+Other:
+
+5 VDC wall wart (Allelectronics)
+Toaster Oven (local)
+Sheet Alumimiun 
+Heat Sink Compound
+Wire
+HighHeat Epoxy Putty (JB Weld)
+Ceramic tiles
+
