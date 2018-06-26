@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 14:45:39 2018
-//  Last Modified : <180624.1901>
+//  Last Modified : <180626.1243>
 //
 //  Description	
 //
@@ -98,6 +98,7 @@ private:
     void menu_edit_profile(profile_t* profile);
     void menu_auto_mode();
     void menu_edit_settings();
+    void menu_flash_filesystem();
 #define printat(r,c,t) (setCursor((c)*FONT_WIDTH,(r)*FONT_HEIGHT), print(t))
 #define printlnat(r,c,t) (setCursor((c)*FONT_WIDTH,(r)*FONT_HEIGHT), println(t))
     
@@ -110,6 +111,12 @@ private:
     void draw_graph(void);
     double approx_pwm(double target);
     uint16_t pid(double target, double current, double * integral, double * last_error);
+    int current_row;
+    static void file_list_callback(File file,void *userdata) {
+        Menu *m = (Menu *)userdata;
+        m->file_list(file);
+    }
+    void file_list(File file);
 public:
     Menu(uint16_t _bg = ST7735_BLACK,uint16_t _txtfg = ST7735_WHITE,
          uint16_t _graphcolor = ST7735_WHITE) : 

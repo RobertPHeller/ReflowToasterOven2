@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sun Jun 24 19:35:11 2018
-//  Last Modified : <180624.1955>
+//  Last Modified : <180626.1255>
 //
 //  Description	
 //
@@ -59,12 +59,19 @@
 #define NEOPIN         40
 #endif
 
+extern Adafruit_SPIFlash flash;
+extern Adafruit_W25Q16BV_FatFs fatfs;
+
+
 class FileIO {
 public:
     FileIO() {flashstarted = mounted = false;}
     bool begin();
     int WriteFile(const char *name,uint8_t *data,size_t length);
     int ReadFile(const char *name,uint8_t *data,size_t length);
+    int DeleteFile(const char *name);
+    int ListFiles(void(* callback_func) (File file,void *userdata),void *userdata);
+    int EraseDisk();
 private:
     bool flashstarted;
     bool mounted;

@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 14:46:53 2018
-//  Last Modified : <180624.1930>
+//  Last Modified : <180626.1256>
 //
 //  Description	
 //
@@ -208,7 +208,7 @@ void Menu::menu_manual_pwm_ctrl()
     {
         element.set(cur_pwm);
         cur_sensor = sensor.read();
-        
+        fillScreen(bg);
         // draw the LCD
         for (int r = 0; r < LCD_ROWS; r++)
         {
@@ -302,6 +302,7 @@ void Menu::menu_manual_temp_ctrl()
         if (tmr_drawlcd_flag || (tmr_checktemp_flag == 0 && tmr_writelog_flag == 0))
         {
             tmr_drawlcd_flag = 0;
+            fillScreen(bg);
             // draw the LCD
             for (int r = 0; r < LCD_ROWS; r++)
             {
@@ -404,6 +405,7 @@ void Menu::menu_edit_profile(profile_t* profile)
         element.set(0); // keep off for safety
         
         // draw on LCD
+        fillScreen(bg);
         for (int r = 0; r < LCD_ROWS; r++)
         {
             /*lcd_set_row_column(r, 0);*/
@@ -560,6 +562,7 @@ void Menu::menu_auto_mode()
         element.set(0); // keep off for safety
 
         // draw on LCD
+        fillScreen(bg);
         for (int r = 0; r < LCD_ROWS; r++)
         {
             /*lcd_set_row_column(r, 0);*/
@@ -689,6 +692,7 @@ void Menu::menu_edit_settings()
         element.set(0); // keep off for safety
         
         // draw LCD
+        fillScreen(bg);
         for (int r = 0; r < LCD_ROWS; r++)
         {
             /*lcd_set_row_column(r, 0);*/
@@ -838,6 +842,7 @@ void Menu::main()
         
         if (screen_dirty != 0) // only draw if required
         {
+            fillScreen(bg);
             for (int r = 0; r < LCD_ROWS; r++)
             {
                 /*lcd_set_row_column(r, 0);*/
@@ -882,6 +887,9 @@ void Menu::main()
                 case 5:
                     printlnat(r,1,"Edit Settings");
                     break;
+                case 6:
+                    printlnat(r,1,"Flash Filesystem Control");
+                    break;
                 default:
                     /*lcd_clear_restofrow();*/
                     break;
@@ -915,6 +923,10 @@ void Menu::main()
             {
                 menu_edit_settings();
             }
+            else if (selection == 4)
+            {
+                menu_flash_filesystem();
+            }
             
             screen_dirty = 1;
         }
@@ -924,7 +936,7 @@ void Menu::main()
             while (button_mid());
             button_debounce();
             
-            selection = (selection + 1) % 4; // change selected menu item
+            selection = (selection + 1) % 5; // change selected menu item
             
             screen_dirty = 1;
         }
@@ -1271,3 +1283,134 @@ void Menu::draw_graph(void)
     }
 }
     
+void Menu::menu_flash_filesystem()
+{
+    char selection = 0;
+    while(1)
+    {
+        element.set(0); // keep off for safety
+        // draw LCD
+        fillScreen(bg);
+        for (int r = 0; r < LCD_ROWS; r++)
+        {
+            /*lcd_set_row_column(r, 0);*/
+            // draw indicator beside the selected menu item
+            if (r - 2 == selection)
+            {
+                printat(r,0,'>');
+            }
+            else
+            {
+                if (r != 1)
+                {
+                    printat(r,0,' ');
+                }
+            }
+            
+            switch (r)
+            {
+            case 0:
+                // menu title
+                printlnat(r,1,"Flash Filesystem Functions");
+                break;
+            case 1:
+                // draw a horizontal divider line across the screen
+                for (int c = 0; c < LCD_WIDTH; c++)
+                {
+                    printat(r,c,'\176');
+                }
+                break;
+                
+                // display info/submenu items
+            case 2:
+                printlnat(r,1,"Erase disk");
+                break;
+            case 3:
+                printlnat(r,1,"List");
+                break;
+            case 4:
+                printlnat(r,1,"Delete Settings.dat");
+                break;
+            case 5:
+                printlnat(r,1,"Delete Profile.dat");
+                break;
+            case 6:
+                printlnat(r,1,"Back to Home Menu");
+                break;
+            default:
+                break;
+            }
+        }
+        
+        switch(selection)
+        {
+        case 0:
+            filesystem.EraseDisk();
+            break;
+        case 1:
+            fillScreen(bg);
+            printlnat(0,0,"Files on the disk");
+            current_row = 2;
+            filesystem.ListFiles(file_list_callback,this);
+            while (1) {
+                if (button_mid())
+                {
+                    button_held = 0;
+                    button_debounce();
+                    while (button_mid());
+                    button_debounce();
+                    break;
+                }
+            }
+            break;
+        case 2:
+            filesystem.DeleteFile("Settings.dat");
+            break;
+        case 3:
+            filesystem.DeleteFile("Profile.dat");
+            break;
+        default:
+            // there's no need for button holding if it's in a non-value-changing menu item
+            button_held = 0;
+            break;
+        }
+        
+        if (selection == 4) // the "back to home menu" option
+        {
+            if (button_up())
+            {
+                button_debounce();
+                while (button_up());
+                button_debounce();
+                
+                // back to main menu
+                return;
+            }
+        }
+        
+        if (button_mid())
+        {
+            button_held = 0;
+            
+            button_debounce();
+            while (button_mid());
+            button_debounce();
+            
+            // change selected menu item to the next one
+            selection = (selection + 1) % 5;
+        }
+    }
+}
+
+void Menu::file_list(File file)
+{
+    if (file.isDirectory()) {
+        printat(current_row,0,"d");
+    } else {
+        printat(current_row,0," ");
+    }
+    printat(current_row,3,str_from_int(file.size()));
+    printat(current_row,20,file.name());
+    file.close();
+    current_row++;
+}

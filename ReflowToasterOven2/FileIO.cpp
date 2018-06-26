@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sun Jun 24 19:37:16 2018
-//  Last Modified : <180624.1954>
+//  Last Modified : <180626.1316>
 //
 //  Description	
 //
@@ -95,3 +95,45 @@ int FileIO::ReadFile(const char *name,uint8_t *data,size_t length)
         return -1;
     }
 }
+
+int FileIO::DeleteFile(const char *name)
+{
+    fatfs.remove(name);
+}
+
+int FileIO::EraseDisk()
+{
+    File root = fatfs.open("/");
+    if (!root) return -1;
+    File child = root.openNextFile();
+    while (child) {
+        if (!child.isDirectory()) {
+            if (!remove(child.name())) {
+                return -1;
+            } else {
+                if (!fatfs.rmdir(child.name())) {
+                    return -1;
+                }
+            }
+        }
+        child = root.openNextFile();
+    }
+    root.close();
+    return 0;
+}
+
+int FileIO::ListFiles(void(* callback_func) (File file,void *userdata),
+                      void *userdata)
+{
+    File root = fatfs.open("/");
+    if (!root) return -1;
+    File child = root.openNextFile();
+    while (child) {
+        (*callback_func)(child,userdata);
+        child = root.openNextFile();
+    }
+    root.close();
+    return 0;
+}
+    
+                

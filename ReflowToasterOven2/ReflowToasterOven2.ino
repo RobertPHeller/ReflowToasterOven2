@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sun Jun 24 09:38:54 2018
-//  Last Modified : <180625.1526>
+//  Last Modified : <180626.1233>
 //
 //  Description	
 //
@@ -75,6 +75,7 @@ void setup()
     Serial.begin(115200);
     Serial.println(PSTR("Initializing..."));
     
+    filesystem.begin();
     sensor.init();
     element.init();
     tmr_init();
