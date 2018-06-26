@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 15:41:47 2018
-//  Last Modified : <180624.2006>
+//  Last Modified : <180626.1356>
 //
 //  Description	
 //
@@ -81,6 +81,6 @@ void Profile::Save() {
     // save the data block into EEPROM
     uint8_t* ptr = (uint8_t*)this;
     uint8_t len = sizeof(profile_t);
-    size_t l = filesystem.WriteFile("profile.dat",ptr,len);
+    size_t l = filesystem.WriteFile("Profile.dat",ptr,len);
 }
 
