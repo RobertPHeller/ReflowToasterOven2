@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 14:46:53 2018
-//  Last Modified : <180626.1256>
+//  Last Modified : <180626.1354>
 //
 //  Description	
 //
@@ -1323,16 +1323,16 @@ void Menu::menu_flash_filesystem()
                 
                 // display info/submenu items
             case 2:
-                printlnat(r,1,"Erase disk");
-                break;
-            case 3:
                 printlnat(r,1,"List");
                 break;
-            case 4:
+            case 3:
                 printlnat(r,1,"Delete Settings.dat");
                 break;
-            case 5:
+            case 4:
                 printlnat(r,1,"Delete Profile.dat");
+                break;
+            case 5:
+                printlnat(r,1,"Erase disk");
                 break;
             case 6:
                 printlnat(r,1,"Back to Home Menu");
@@ -1345,9 +1345,6 @@ void Menu::menu_flash_filesystem()
         switch(selection)
         {
         case 0:
-            filesystem.EraseDisk();
-            break;
-        case 1:
             fillScreen(bg);
             printlnat(0,0,"Files on the disk");
             current_row = 2;
@@ -1363,11 +1360,14 @@ void Menu::menu_flash_filesystem()
                 }
             }
             break;
-        case 2:
+        case 1:
             filesystem.DeleteFile("Settings.dat");
             break;
-        case 3:
+        case 2:
             filesystem.DeleteFile("Profile.dat");
+            break;
+        case 3:
+            filesystem.EraseDisk();
             break;
         default:
             // there's no need for button holding if it's in a non-value-changing menu item
