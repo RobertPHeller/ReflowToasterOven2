@@ -1,0 +1,55 @@
+This project is based on the Instructables "Hack a Toaster Oven for Reflow
+Soldering" by frank26080115 at
+https://www.instructables.com/id/Hack-a-Toaster-Oven-for-Reflow-Soldering/
+
+Notable differences:
+
+1) It uses an Adafruit Feather M0 Expressas the processing element and all of
+the electronics (except the display, pushbuttons, buzzer, and relay) are
+mounted on an cut down BusBoard Prototype Systems BR1 solderable breadboard --
+all of the components are through-hole components.
+
+There is a KiCAD project here. It includes a "four layer" board. Actually I
+have no intention of creating a "four layer" PCB. I intend to build this on
+aBusBoard Prototype Systems BR1 solderable breadboard. The PCB I "designed"
+with KiCAD is a mock up for the BR1 solderable breadboard. The green layer
+represent the wiring already on the BR1 solderable breadboard, and includes
+the bus strips. The red, blue and white "layers" represent the added wiring.
+The board also provides the component placement. For those people without
+KiCAD installed, I have included a PDF of the schematic in the file
+ReflowToasterOven2.pdf and a SVG file of the board showing the layout.
+
+2) Everything is mounted in a pair of plastic boxes and instead of "hacking"
+an extension code, an AC power entry module and a pair of AC Receptacles are
+used.
+
+There are three files related to the mechanical construction:
+
+ReflowToasterOven-mech2.tcl
+ReflowToasterOven-mech2.gcad
+ReflowToasterOven-mech2.dxf
+
+ReflowToasterOven-mech2.tcl is a Tcl program that generates the 
+ReflowToasterOven-mech2.gcad file, which is the input for the GCAD3D program.  
+The ReflowToasterOven-mech2.dxf is a DXF file, that can be imported to any 3D 
+cad program.
+
+
+3) An Adafruit 1.8" *Color* TFT LCD SPI display is used, using Adafruit's 
+graphics library.
+
+4) The software is a "standard" Arduino project.
+
+And the code lives in the ReflowToasterOven2 subdirectory. It compiles
+successfully and just fits in the Uno's flash memory and only 1/2 of the SRAM
+is used by static variables, leaving just under 1K for dynamic variables.
+
+You will need to install the Adafruit ST7735 and Adafruit_GFX libraries from 
+Adafruit's GitHub repo.  You will also need the MsTimer2 library 
+(http://www.pjrc.com/teensy/td_libs_MsTimer2.html).
+
+*Most* of the code is copied from the original program by frank26080115.  I 
+modified things to use C++ classes and adapted to use the Arduino I/O 
+libraries, the Adafruit ST7735-based TFT display and the MsTimer2 library.
+
+I have not built or tested it yet.
