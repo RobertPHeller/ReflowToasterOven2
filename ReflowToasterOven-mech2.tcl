@@ -9,7 +9,7 @@
 #  Author        : $Author$
 #  Created By    : Robert Heller
 #  Created       : Sun Mar 18 10:39:04 2018
-#  Last Modified : <180625.0940>
+#  Last Modified : <180706.0849>
 #
 #  Description	
 #
@@ -240,8 +240,8 @@ snit::type ReflowToasterOven2Board {
     typemethod BoardWidth {} {return $boardWidth}
     typevariable boardLength 4500.0;#[::MM2Mils 114.30]
     typemethod BoardLength {} {return $boardLength}
-    typevariable holes { {4400 500 0} {4400 1300 0} {100 100 0} 
-        {100 1700 0} }
+    typevariable holes { {4400 500 0} {4400 1300 0} {150 150 0} 
+        {150 1650 0} }
     typevariable FeatherWidth 900
     typevariable FeatherLength 2000
     typevariable FeatherYUSB_Offset 450
@@ -251,7 +251,7 @@ snit::type ReflowToasterOven2Board {
         set yoff [$self cget -yoff]
         set zoff [$self cget -zoff]
         if {$above} {
-            set zoff [expr {$zoff + 70}]
+            set zoff [expr {$zoff + 62.5}]
         } else {
             set heightMM [expr {$heightMM * -1}]
         }
@@ -271,7 +271,7 @@ snit::type ReflowToasterOven2Board {
                 -surface [PolySurface create ${name}_USBJackSurf \
                           -rectangle yes \
                           -cornerpoint [list [expr {$xoff - 40}] [expr {($FeatherYBoardOffset + $FeatherYUSB_Offset) + $yoff}] \
-                                        [expr {(70 + 336.5 + 125 + 70) + $zoff}]] \
+                                        [expr {(62.5 + 196.5 + 100 + 62.5) + $zoff}]] \
                           -vec1 {300 0 0 } -vec2 {0 220 0}] \
                 -vector {0 0 110} -color $::white]
     }
@@ -282,7 +282,7 @@ snit::type ReflowToasterOven2Board {
         return [PolySurface create ${name}_USBJackSurfCutout \
                 -rectangle yes \
                 -cornerpoint [list [expr {$xoff - 40}] [expr {($FeatherYBoardOffset + $FeatherYUSB_Offset) + $yoff}] \
-                              [expr {(70 + 336.5 + 125 + 70) + $zoff}]] \
+                              [expr {(62.5 + 196.5 + 100 + 62.5) + $zoff}]] \
                 -vec1 {0 0 110} -vec2 {0 300 0}]
     }
     component board
@@ -311,39 +311,39 @@ snit::type ReflowToasterOven2Board {
                         -cornerpoint [list $xoff $yoff $zoff] \
                         -vec1 [list $boardLength 0 0] \
                         -vec2 [list 0 $boardWidth 0]] \
-              -vector {0 0 70} -color $::tan
+              -vector {0 0 62.5} -color $::tan
         install h1 using PrismSurfaceVector  ${selfns}h1 \
               -surface [PolySurface create ${selfns}h1Surf \
                         -rectangle yes \
                         -cornerpoint [list [expr {200 + $xoff}] \
                                       [expr {500 + $yoff}] \
-                                      [expr {70 + $zoff}]] \
+                                      [expr {62.5 + $zoff}]] \
                         -vec1 {1600 0 0} -vec2 {0 100 0}] \
-              -vector {0 0 336.5} -color $::black
+              -vector {0 0 296.5} -color $::black
         install h2 using PrismSurfaceVector  ${selfns}h2 \
               -surface [PolySurface create ${selfns}h2Surf \
                         -rectangle yes \
                         -cornerpoint [list [expr {600 + $xoff}] \
                                       [expr {1300 + $yoff}] \
-                                      [expr {70 + $zoff}]] \
+                                      [expr {62.5 + $zoff}]] \
                         -vec1 {1200 0 0} -vec2 {0 100 0}] \
-              -vector {0 0 336.5} -color $::black
+              -vector {0 0 296.5} -color $::black
         install feather using PrismSurfaceVector ${selfns}Feather \
               -surface [PolySurface create ${selfns}FeatherSurf \
                         -rectangle yes \
                         -cornerpoint [list $xoff \
                                       [expr {$yoff + $FeatherYBoardOffset}] \
-                                      [expr {$zoff + (70 + 336.5 + 125)}]] \
+                                      [expr {$zoff + (62.5 + 196.5 + 100)}]] \
                         -vec1 [list $FeatherLength 0 0] \
                         -vec2 [list 0 $FeatherWidth 0]] \
-              -vector {0 0 70} -color $::black
+              -vector {0 0 62.5} -color $::black
         set mhole1 [$self mountingHole 0]
         set mhole2 [$self mountingHole 1]
         set mhole3 [$self mountingHole 2]
         set mhole4 [$self mountingHole 3]
         set usbjack  [$self USBJack]
     }
-    method mountingHole {index {name {}} {height 70} {standoffMM 0}} {
+    method mountingHole {index {name {}} {height 62.5} {standoffMM 0}} {
         if {$name eq {}} {set name $selfns}
         set xoff [$self cget -xoff]
         set yoff [$self cget -yoff]
@@ -1388,6 +1388,12 @@ set acpowerentry [ACPowerEntry ACPower -xoff [$lowerbox InsideFrontX] \
                   -orientation vertical]
 $acpowerentry print
 
+set acpowerentry_m1 [$acpowerentry MountingHole 0 [$lowerbox WallThickness] 0 acpowerentry_m1] 
+set acpowerentry_m2 [$acpowerentry MountingHole 1 [$lowerbox WallThickness] 0 acpowerentry_m2] 
+
+$acpowerentry_m1 print
+$acpowerentry_m2 print
+
 set backrecept [ACReceptacle BackReeptacle \
                 -xoff [expr {[$lowerbox InsideFrontX] + [$lowerbox InsideLength] - [$lowerbox WallThickness]}] \
                 -yoff [expr {[$lowerbox InsideFrontY] + 62.5}] \
@@ -1446,6 +1452,8 @@ PostScriptFile newPage {Lower Box Right End}
 $lowerbox printPSFront [PostScriptFile fp]
 
 [$acpowerentry CutoutSurf] printPS [PostScriptFile fp] 1 2 [expr {([$upperbox cget -yoff]+[$upperbox BottomOuterWidth])/1000.0}] 0 -.001 -.001
+$acpowerentry_m1 printPS [PostScriptFile fp] 1 2 [expr {([$upperbox cget -yoff]+[$upperbox BottomOuterWidth])/1000.0}] 0 -.001 -.001
+$acpowerentry_m2 printPS [PostScriptFile fp] 1 2 [expr {([$upperbox cget -yoff]+[$upperbox BottomOuterWidth])/1000.0}] 0 -.001 -.001
 
 PostScriptFile newPage {Lower Box Left End}
 
