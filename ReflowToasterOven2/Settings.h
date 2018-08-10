@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 15:40:53 2018
-//  Last Modified : <180624.1959>
+//  Last Modified : <180810.0949>
 //
 //  Description	
 //
@@ -60,6 +60,9 @@ typedef struct Settings
     bool Valid();
     void Save();
     void Load();
+    Settings() {Default();}
+    void DownloadFromSerial();
+    void UploadToSerial();
 } settings_t;
 
 extern settings_t settings;

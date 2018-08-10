@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 13:23:58 2018
-//  Last Modified : <180624.1903>
+//  Last Modified : <180722.1952>
 //
 //  Description	
 //
@@ -47,9 +47,9 @@
 #define button_debounce_ms(x) delay(x)
 #define button_debounce() delayMicroseconds(100)
 
-#define SWITCH3 A3 /* |     */ 
+#define SWITCH1 A3 /* |     */ 
 #define SWITCH2 A2 /*  } Push buttons (DigitalRead()) */
-#define SWITCH1 A1 /* |     */
+#define SWITCH3 A1 /* |     */
 
 #define buttons_init() do{ \
 pinMode(SWITCH1, INPUT_PULLUP); \

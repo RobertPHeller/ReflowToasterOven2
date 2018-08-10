@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sun Jun 24 09:38:54 2018
-//  Last Modified : <180626.1233>
+//  Last Modified : <180810.0919>
 //
 //  Description	
 //
@@ -54,6 +54,7 @@
 #include "heatingelement.h"
 #include "Menu.h"
 #include "FileIO.h"
+#include "pitches.h"
 
 static const char rcsid[] = "@(#) : $Id$";
 
@@ -73,23 +74,57 @@ Heat element = Heat();
 void setup()
 {
     Serial.begin(115200);
-    Serial.println(PSTR("Initializing..."));
+    Serial.println("Initializing...");
     
     filesystem.begin();
     sensor.init();
     element.init();
+#ifdef TIMER
     tmr_init();
+#endif
     menu.init();
-    Serial.println(PSTR("Reflow Toaster Oven 1.0 Setup finished"));
+    Serial.println("Reflow Toaster Oven 1.0 Setup finished");
     menu.main();
 }
-
-void loop() {} // Not used
 
 volatile uint16_t tmr_ovf_cnt = 0;
 volatile char tmr_checktemp_flag = 0;
 volatile char tmr_drawlcd_flag = 0;
 volatile char tmr_writelog_flag = 0;
+
+void loop() {
+    if (Serial.available() > 0) {
+        while (Serial.available() > 0 && Serial.read() != '\n') ;
+        Serial.print("*** tmr_ovf_cnt = ");Serial.println(tmr_ovf_cnt);
+        Serial.print("*** tmr_checktemp_flag = ");Serial.println(tmr_checktemp_flag);
+        Serial.print("*** tmr_drawlcd_flag = ");Serial.println(tmr_drawlcd_flag);
+        Serial.print("*** tmr_writelog_flag = ");Serial.println(tmr_writelog_flag);
+        //menu.fillRect(0,0,50,50,ST7735_BLUE);
+        //tone(BUZZER,NOTE_GS3,3000);
+        delay(1000);
+    } else {
+        //menu.fillRect(25,25,25,24,ST7735_RED);
+    }
+#if 0
+    if (button_up()) {
+        button_debounce();
+        while (button_up());
+        button_debounce();
+        Serial.println("Button up");
+    } else if (button_mid()) {
+        button_debounce();
+        while (button_mid());
+        button_debounce();
+        Serial.println("Button mid");
+    } else if (button_down()) {
+        button_debounce();
+        while (button_down());
+        button_debounce();
+        Serial.println("Button down");
+    }
+#endif
+    delay(1);
+} // Not used
 
 void TIMER0_OVF_vect()
 {

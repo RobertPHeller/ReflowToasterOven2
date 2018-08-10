@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 13:05:37 2018
-//  Last Modified : <180624.1851>
+//  Last Modified : <180810.0917>
 //
 //  Description	
 //
@@ -48,8 +48,12 @@
 #include "Settings.h"
 #include "Profile.h"
 
-#define TMR_OVF_TIMESPAN 0.002048// timespan (in seconds) between consecutive timer overflow events
-#define DEMO_MODE 0 // 1 means the current temperature reading will always be overwritten to match the target temperature, note that PWM output is still active even if in DEMO mode
+#ifdef TIMER
+#define TMR_OVF_TIMESPAN 0.001953125// timespan (in seconds) between consecutive timer overflow events
+#else
+#define TMR_OVF_TIMESPAN 0.002// timespan (in seconds) between consecutive timer overflow events
+#endif
+#define DEMO_MODE 1 // 1 means the current temperature reading will always be overwritten to match the target temperature, note that PWM output is still active even if in DEMO mode
 
 extern volatile uint16_t tmr_ovf_cnt;
 extern volatile char tmr_checktemp_flag;

@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 14:45:39 2018
-//  Last Modified : <180626.1243>
+//  Last Modified : <180810.1031>
 //
 //  Description	
 //
@@ -61,9 +61,9 @@
 
 #define BUZZER 12    // Buzzer -- passed to Tone()
 #define BACKLIGHT 5 // PWM / AnalogWrite() backlight brightness
-#define TFT_DC 10 //  
-#define TFT_RST 11 // 
-#define TFTCS 6 //   |
+#define TFT_DC 6 //  
+#define TFT_RST 9 // 
+#define TFTCS 10 //   |
 //#define MOSI 11 //    } TFT Display connections (MISO not used)
 //#define MISO 12 //    |
 //#define SCK 13 //    /
@@ -99,14 +99,14 @@ private:
     void menu_auto_mode();
     void menu_edit_settings();
     void menu_flash_filesystem();
+    char* str_from_double(double value, int decimalplaces);
 #define printat(r,c,t) (setCursor((c)*FONT_WIDTH,(r)*FONT_HEIGHT), print(t))
 #define printlnat(r,c,t) (setCursor((c)*FONT_WIDTH,(r)*FONT_HEIGHT), println(t))
-    
+    void serialCheck(const char *menuname,int cursel);
     inline char* str_from_int(signed long value)
     {
 	return ltoa(value, strbuf, 10);
     }
-    char* str_from_double(double value, int decimalplaces);
     void auto_go(profile_t* profile);
     void draw_graph(void);
     double approx_pwm(double target);
@@ -118,8 +118,8 @@ private:
     }
     void file_list(File file);
 public:
-    Menu(uint16_t _bg = ST7735_BLACK,uint16_t _txtfg = ST7735_WHITE,
-         uint16_t _graphcolor = ST7735_WHITE) : 
+    Menu(uint16_t _bg = ST7735_WHITE,uint16_t _txtfg = ST7735_BLACK,
+         uint16_t _graphcolor = ST7735_GREEN) : 
     Adafruit_ST7735(TFTCS, TFT_DC, TFT_RST) {
         button_held = 0;
         bg = _bg;
@@ -134,13 +134,13 @@ public:
         setTextColor(txtfg,txtbg);
         setTextWrap(false);
         setTextSize(1);
-        setRotation(1); // Rotate screen 90 degrees (?)
+        setRotation(3); // Rotate screen 90 degrees (?)
         pinMode(BUZZER,OUTPUT);
         pinMode(BACKLIGHT,OUTPUT);
         analogWrite(BACKLIGHT,128);/* Medium brightness */
+        //digitalWrite(BACKLIGHT,HIGH); //Turn on the backlight
     }
     void main();
-    
 };
 
 

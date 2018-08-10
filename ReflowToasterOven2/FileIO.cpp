@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sun Jun 24 19:37:16 2018
-//  Last Modified : <180626.1316>
+//  Last Modified : <180808.1520>
 //
 //  Description	
 //
@@ -50,14 +50,21 @@ Adafruit_W25Q16BV_FatFs fatfs(flash);
 
 
 bool FileIO::begin() {
+    Serial.print("*** FileIO::begin() entered: ");
+    Serial.print("flashstarted = "); Serial.println(flashstarted);
     if (!flashstarted) {
         if (!flash.begin(FLASH_TYPE)) {
             return false;
         }
         flashstarted = true;
     }
-    if (!mounted) {
-        if (!fatfs.begin()) {
+    Serial.print("*** FileIO::begin(): (before while) mounted = ");Serial.println(mounted);
+    while (!mounted) {
+        Serial.println("*** FileIO::begin(): Mounting file system");
+        mounted = fatfs.begin();
+        Serial.println("*** FileIO::begin(): in while: mounted = ");Serial.println(mounted);
+        if (!mounted) {
+            Serial.println("*** FileIO::begin(): Formatting File system...");
             fatfs.activate();
             DWORD plist[] = {100, 0, 0, 0};
             uint8_t buf[512] = {0}; 
@@ -65,9 +72,9 @@ bool FileIO::begin() {
             if (r != FR_OK) return false;
             r = f_mkfs("", FM_ANY, 0, buf, sizeof(buf));
             if (r != FR_OK) return false;
-            mounted = fatfs.begin();
         }
     }
+    Serial.print("*** FileIO::begin(): (after while) mounted = ");Serial.println(mounted);
     return mounted;
 }
 
@@ -93,6 +100,38 @@ int FileIO::ReadFile(const char *name,uint8_t *data,size_t length)
         return r;
     } else {
         return -1;
+    }
+}
+
+void FileIO::DumpToSerial(const char *name)
+{
+    char buffer[8];
+    File file = fatfs.open(name,FILE_READ);
+    if (file) {
+        Serial.println(name);
+        for (int i = 0; i < file.size(); i++) {
+            if ((i % 16) == 0) {
+                if (i > 0) Serial.println();
+                sprintf(buffer,"%04X:",i);
+                Serial.print(buffer);
+            }
+            sprintf(buffer," %02X",file.read());
+            Serial.print(buffer);
+        }
+        Serial.println();
+        file.close();
+    }
+}
+
+void FileIO::ListToSerial(const char *name)
+{
+    File file = fatfs.open(name,FILE_READ);
+    if (file) {
+        Serial.println(name);
+        for (int i = 0; i < file.size(); i++) {
+            Serial.print((char)file.read());
+        }
+        file.close();
     }
 }
 

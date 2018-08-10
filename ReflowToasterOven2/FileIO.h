@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sun Jun 24 19:35:11 2018
-//  Last Modified : <180626.1255>
+//  Last Modified : <180808.1440>
 //
 //  Description	
 //
@@ -72,6 +72,8 @@ public:
     int DeleteFile(const char *name);
     int ListFiles(void(* callback_func) (File file,void *userdata),void *userdata);
     int EraseDisk();
+    void DumpToSerial(const char *name);
+    void ListToSerial(const char *name);
 private:
     bool flashstarted;
     bool mounted;

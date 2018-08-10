@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 15:41:39 2018
-//  Last Modified : <180624.1849>
+//  Last Modified : <180810.0950>
 //
 //  Description	
 //
@@ -62,6 +62,9 @@ typedef struct Profile
     bool Valid();
     void Load();
     void Save();
+    Profile() {Default();}
+    void DownloadFromSerial();
+    void UploadToSerial();
 } profile_t;
 
 

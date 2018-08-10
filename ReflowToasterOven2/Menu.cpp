@@ -8,7 +8,7 @@
 //  Author        : $Author$
 //  Created By    : Robert Heller
 //  Created       : Sat Mar 24 14:46:53 2018
-//  Last Modified : <180626.1354>
+//  Last Modified : <180810.1109>
 //
 //  Description	
 //
@@ -176,8 +176,11 @@ int32_t Menu::button_change_int(int32_t oldvalue, int32_t increment, int32_t lim
 
 char* Menu::str_from_double(double value, int decimalplaces)
 {
-    
-    snprintf(strbuf,sizeof(strbuf),"%f.*",decimalplaces,value);
+    unsigned int result;
+    result = sprintf(strbuf,"%5.2f",value);
+    //printat(11,0,"*** result = ");println(result);
+    //printat(12,0,", sizeof(strbuf) is ");println(sizeof(strbuf));
+    //printat(13,0,"*** strbuf is '");print(strbuf);println("'");
     return strbuf;
 #if 0
 	char* result = dtostrf(value, -(LCD_WIDTH/FONT_WIDTH), decimalplaces, strbuf);
@@ -194,25 +197,51 @@ char* Menu::str_from_double(double value, int decimalplaces)
 #endif
 }
 
+extern void TIMER0_OVF_vect();
+
+void Menu::serialCheck(const char *menuname, int cursel)
+{
+    if (Serial.available() > 0) {
+        while (Serial.available() > 0 && Serial.read() != '\n') ;
+        Serial.print("*** Menu::serialCheck(): ");
+        Serial.print(menuname);
+        Serial.print(", cursel: ");
+        Serial.println(cursel);
+        //fillScreen(graphcolor);
+        //fillRect(0,0,50,50,ST7735_BLUE);
+        Serial.print("*** tmr_ovf_cnt = ");Serial.println(tmr_ovf_cnt);
+        Serial.print("*** tmr_checktemp_flag = ");Serial.println((int)tmr_checktemp_flag);
+        Serial.print("*** tmr_drawlcd_flag = ");Serial.println((int)tmr_drawlcd_flag);
+        Serial.print("*** tmr_writelog_flag = ");Serial.println((int)tmr_writelog_flag);
+        
+    }
+#ifndef TIMER
+    delay(2);
+    TIMER0_OVF_vect();
+#endif
+}
+
 void Menu::menu_manual_pwm_ctrl()
 {
     sensor.filter_reset();
     
-    Serial.println("manual PWM control mode,");
+    Serial.println("manual PWM control mode menu");
     uint16_t iteration = 0;
 
     uint16_t cur_pwm = 0;
     uint16_t cur_sensor = sensor.read();
     element.set(cur_pwm);
+    Serial.println("PWMLog>");
     while(1)
     {
+        serialCheck("Manual PWM Control",cur_pwm);
         element.set(cur_pwm);
         cur_sensor = sensor.read();
         fillScreen(bg);
         // draw the LCD
         for (int r = 0; r < LCD_ROWS; r++)
         {
-            //lcd_set_row_column(r, 0);
+            //lcd_set_row_column(r, 0); 
             
             switch (r)
             {
@@ -260,6 +289,7 @@ void Menu::menu_manual_pwm_ctrl()
             while (button_mid());
             button_debounce();
             
+            Serial.println("PWMLog<");
             // exit this mode, back to home menu
             return;
         }
@@ -271,7 +301,8 @@ void Menu::menu_manual_pwm_ctrl()
             iteration++; // used so CSV entries can be sorted by time
             
             // print log in CSV format
-            Serial.print(str_from_double(iteration * TMR_OVF_TIMESPAN * 512, 1));
+            //Serial.print(str_from_double(iteration * TMR_OVF_TIMESPAN * 512, 1));
+            Serial.print(iteration * TMR_OVF_TIMESPAN * 512);
             Serial.print(", ");
             Serial.print(str_from_int(cur_sensor));
             Serial.print(", ");
@@ -296,9 +327,11 @@ void Menu::menu_manual_temp_ctrl()
     double integral = 0.0, last_error = 0.0;
     uint16_t tgt_sensor = sensor.temperature_to_sensor((double)tgt_temp);
     uint16_t cur_sensor = sensor.read();
-	
+    
+    Serial.println("TempLOG>");
     while(1)
     {
+        serialCheck("Manual Temp Control menu",tgt_temp);
         if (tmr_drawlcd_flag || (tmr_checktemp_flag == 0 && tmr_writelog_flag == 0))
         {
             tmr_drawlcd_flag = 0;
@@ -367,7 +400,7 @@ void Menu::menu_manual_temp_ctrl()
             button_debounce();
             while (button_mid());
             button_debounce();
-            
+            Serial.println("TempLOG<");
             // exit this mode, back to home menu
             return;
         }
@@ -388,7 +421,8 @@ void Menu::menu_manual_temp_ctrl()
             iteration++; // used so CSV entries can be sorted by time
             
             // print log in CSV format
-            Serial.print(str_from_double(iteration * TMR_OVF_TIMESPAN * 512, 1)); Serial.print(", ");
+            //Serial.print(str_from_double(iteration * TMR_OVF_TIMESPAN * 512, 1)); Serial.print(", ");
+            Serial.print(iteration * TMR_OVF_TIMESPAN * 512); Serial.print(", ");
             Serial.print(str_from_int(cur_sensor)); Serial.print(", ");
             Serial.print(str_from_int(tgt_temp)); Serial.print(", ");
             Serial.print(str_from_int(cur_pwm)); Serial.println(",");
@@ -399,127 +433,137 @@ void Menu::menu_manual_temp_ctrl()
 void Menu::menu_edit_profile(profile_t* profile)
 {
     char selection = 0;
+    char screen_dirty = 1;
 
     while(1)
     {
+        serialCheck("Edit profile menu",selection);
+
         element.set(0); // keep off for safety
         
-        // draw on LCD
-        fillScreen(bg);
-        for (int r = 0; r < LCD_ROWS; r++)
-        {
-            /*lcd_set_row_column(r, 0);*/
-            
-            // draw a indicator beside the selected menu item
-            if ((r - 2) == selection)
+        if (screen_dirty) {
+            // draw on LCD
+            fillScreen(bg);
+            for (int r = 0; r < LCD_ROWS; r++)
             {
-                printat(r,0,'>');
-            }
-            else
-            {
-                if (r != 1)
-                {
-                    printat(r,0,' ');
-                }
-            }
-            
-            switch (r)
-            {
-            case 0:
-                // menu title
-                printlnat(r,1,"Edit Profile");
-                break;
-            case 1:
-                // this draws a horizontal divider line across the screen
-                for (int c = 0; c < LCD_WIDTH; c++)
-                {
-                    printat(r,c,'\176');
-                }
-                break;
+                /*lcd_set_row_column(r, 0);*/
                 
-                // display info/submenu items
-            case 2:
-                printat(r,1,"Start Rate= ");
-                print(str_from_double(profile->start_rate, 1));
-                println(" `C/s");
-                break;
-            case 3:
-                printat(r,1,"Soak Temp 1= ");
-                print((uint16_t)lround(profile->soak_temp1));
-                println(" `C");
-                break;
-            case 4:
-                printat(r,1,"Soak Temp 2= ");
-                print((uint16_t)lround(profile->soak_temp2));
-                println(" `C");
-                break;
-            case 5:
-                printat(r,1,"Soak Length= ");
-                print(profile->soak_length);
-                println(" s");
-                break;
-            case 6:
-                printat(r,1,"Peak Temp= ");
-                print((uint16_t)lround(profile->peak_temp));
-                println(" `C");
-                break;
-            case 7:			
-                printat(r,1,"Time to Peak= ");
-                print(profile->time_to_peak);
-                println(" s");
-                break;
-            case 8:
-                printat(r,1,"Cool Rate= ");
-                print(str_from_double(profile->cool_rate, 1));
-                println(" `C/s");
-                break;
-            case 9:
-                printlnat(r,1,"Return to Auto Mode");
-                break;
-            default:
-                /*lcd_clear_restofrow();*/
-                break;
+                // draw a indicator beside the selected menu item
+                if ((r - 2) == selection)
+                {
+                    printat(r,0,'>');
+                }
+                else
+                {
+                    if (r != 1)
+                    {
+                        printat(r,0,' ');
+                    }
+                }
+                
+                switch (r)
+                {
+                case 0:
+                    // menu title
+                    printlnat(r,1,"Edit Profile");
+                    break;
+                case 1:
+                    // this draws a horizontal divider line across the screen
+                    for (int c = 0; c < LCD_WIDTH; c++)
+                    {
+                        printat(r,c,'\176');
+                    }
+                    break;
+                    
+                    // display info/submenu items
+                case 2:
+                    printat(r,1,"Start Rate= ");
+                    //print(str_from_double(profile->start_rate, 1));
+                    print(profile->start_rate);
+                    println(" `C/s");
+                    break;
+                case 3:
+                    printat(r,1,"Soak Temp 1= ");
+                    print((uint16_t)lround(profile->soak_temp1));
+                    println(" `C");
+                    break;
+                case 4:
+                    printat(r,1,"Soak Temp 2= ");
+                    print((uint16_t)lround(profile->soak_temp2));
+                    println(" `C");
+                    break;
+                case 5:
+                    printat(r,1,"Soak Length= ");
+                    print(profile->soak_length);
+                    println(" s");
+                    break;
+                case 6:
+                    printat(r,1,"Peak Temp= ");
+                    print((uint16_t)lround(profile->peak_temp));
+                    println(" `C");
+                    break;
+                case 7:			
+                    printat(r,1,"Time to Peak= ");
+                    print(profile->time_to_peak);
+                    println(" s");
+                    break;
+                case 8:
+                    printat(r,1,"Cool Rate= ");
+                    //print(str_from_double(profile->cool_rate, 1));
+                    print(profile->cool_rate);
+                    println(" `C/s");
+                    break;
+                case 9:
+                    printlnat(r,1,"Return to Auto Mode");
+                    break;
+                default:
+                    /*lcd_clear_restofrow();*/
+                    break;
+                }
             }
-        }
-	
-        // change values according to the selected item and buttons being pressed
-        switch (selection)
-        {
-        case 0:
-            profile->start_rate = button_change_double(profile->start_rate, 0.1, 0.1, 5.0);
-            break;
-        case 1:
-            profile->soak_temp1 = button_change_double(profile->soak_temp1, 1, 50, 300);
-            break;
-        case 2:
-            profile->soak_temp2 = button_change_double(profile->soak_temp2, 1, 50, 300);
-            break;
-        case 3:
-            profile->soak_length = button_change_int(profile->soak_length, 0.1, 60, 60*5);
-            break;
-        case 4:
-            profile->peak_temp = button_change_double(profile->peak_temp, 1, 150, 350);
-            break;
-        case 5:
-            profile->time_to_peak = button_change_int(profile->time_to_peak, 1, 0, 60*5);
-            break;
-        case 6:
-            profile->cool_rate = button_change_double(profile->cool_rate, 0.1, 0.1, 5.0);
-            break;
-        default:
-            // there's no need for button holding if it's in a non-value-changing menu item
-            button_held = 0;
-            break;
+            screen_dirty = 0;
         }
         
-        if (selection == 7) // the "return" option
+        if (button_up())
         {
-            if (button_up())
+            button_debounce();
+            while (button_up());
+            button_debounce();
+            
+            // enter the submenu that is selected
+            
+            // change values according to the selected item and buttons being pressed
+            switch (selection)
             {
-                button_debounce();
-                while (button_up());
-                button_debounce();
-                
+            case 0:
+                profile->start_rate = button_change_double(profile->start_rate, 0.1, 0.1, 5.0);
+                break;
+            case 1:
+                profile->soak_temp1 = button_change_double(profile->soak_temp1, 1, 50, 300);
+                break;
+            case 2:
+                profile->soak_temp2 = button_change_double(profile->soak_temp2, 1, 50, 300);
+                break;
+            case 3:
+                profile->soak_length = button_change_int(profile->soak_length, 0.1, 60, 60*5);
+                break;
+            case 4:
+                profile->peak_temp = button_change_double(profile->peak_temp, 1, 150, 350);
+                break;
+            case 5:
+                profile->time_to_peak = button_change_int(profile->time_to_peak, 1, 0, 60*5);
+                break;
+            case 6:
+                profile->cool_rate = button_change_double(profile->cool_rate, 0.1, 0.1, 5.0);
+                break;
+            default:
+                // there's no need for button holding if it's in a non-value-changing menu item
+                button_held = 0;
+                break;
+            }
+            
+            if (selection == 7) // the "return" option
+            {
                 if (profile->Valid())
                 {
                     return;
@@ -534,6 +578,7 @@ void Menu::menu_edit_profile(profile_t* profile)
                     delay(1000);
                 }
             }
+            screen_dirty = 1;
         }
         
         if (button_mid())
@@ -546,6 +591,7 @@ void Menu::menu_edit_profile(profile_t* profile)
             
             // change selected menu item to the next one
             selection = (selection + 1) % 8;
+            screen_dirty = 1;
         }
     }
 }
@@ -554,84 +600,93 @@ void Menu::menu_auto_mode()
 {
     static profile_t profile;
     profile.Load(); // load from eeprom
-
+    //profile.Default();
+    //settings.Default();
+    
     char selection = 0;
+    char screen_dirty = 1;
 
     while(1)
     {
+        serialCheck("Auto mode menu",selection);
+
         element.set(0); // keep off for safety
 
-        // draw on LCD
-        fillScreen(bg);
-        for (int r = 0; r < LCD_ROWS; r++)
-        {
-            /*lcd_set_row_column(r, 0);*/
-            
-            // draw a indicator beside the selected menu item
-            if ((r - 2) == selection)
+        if (screen_dirty) {
+            // draw on LCD
+            fillScreen(bg);
+            for (int r = 0; r < LCD_ROWS; r++)
             {
-                printat(r,0,'>');
-            }
-            else
-            {
-                if (r != 1)
-                {
-                    printat(r,0,' ');
-                }
-            }
-            
-            switch (r)
-            {
-            case 0:
-                // menu title
-                printlnat(r,1,"Auto Mode");
-                break;
-            case 1:
-                // this draws a horizontal divider line across the screen
-                for (int c = 0; c < LCD_WIDTH; c++)
-                {
-                    printat(r,c,'\176');
-                }
-                break;
+                /*lcd_set_row_column(r, 0);*/
                 
-                // display info/submenu items
-            case 2:
-                printlnat(r,1,"Edit Profile");
-                break;
-            case 3:
-                printlnat(r,1,"Reset to Defaults");
-                break;
-            case 4:
-                printlnat(r,1,"Start");
-                break;
-            case 5:
-                printlnat(r,1,"Back to Home Menu");
-                break;
-            default:
-                break;
+                // draw a indicator beside the selected menu item
+                if ((r - 2) == selection)
+                {
+                    printat(r,0,'>');
+                }
+                else
+                {
+                    if (r != 1)
+                    {
+                        printat(r,0,' ');
+                    }
+                }
+                
+                switch (r)
+                {
+                case 0:
+                    // menu title
+                    printlnat(r,1,"Auto Mode");
+                    break;
+                case 1:
+                    // this draws a horizontal divider line across the screen
+                    for (int c = 0; c < LCD_WIDTH; c++)
+                    {
+                        printat(r,c,'\176');
+                    }
+                    break;
+                    
+                    // display info/submenu items
+                case 2:
+                    printlnat(r,1,"Edit Profile");
+                    break;
+                case 3:
+                    printlnat(r,1,"Reset to Defaults");
+                    break;
+                case 4:
+                    printlnat(r,1,"Download Profile");
+                    break;
+                case 5:
+                    printlnat(r,1,"Upload Profile");
+                    break;
+                case 6:
+                    printlnat(r,1,"Start");
+                    break;
+                case 7:
+                    printlnat(r,1,"Back to Home Menu");
+                    break;
+                default:
+                    break;
+                }
             }
+            screen_dirty = 0;
         }
         
-        if (selection == 0) // the "edit profile" menu item
+        if (button_up())
         {
-            if (button_up())
+            button_debounce();
+            while (button_up());
+            button_debounce();
+            
+            // enter the submenu that is selected
+            
+            if (selection == 0) // the "edit profile" menu item
             {
-                button_debounce();
-                while (button_up());
-                button_debounce();
-                
                 menu_edit_profile(&profile);
                 profile.Save(); // save to eeprom
             }
-        }
-        else if (selection == 1) // the "reset to default" menu item
-        {
-            if (button_up())
+            else if (selection == 1) // the "reset to default" menu item
             {
-                button_debounce();
-                while (button_up());
-                button_debounce();
-                
                 profile.Default();
                 profile.Save(); // save to eeprom
                 
@@ -640,34 +695,29 @@ void Menu::menu_auto_mode()
                 tone(BUZZER,NOTE_C5,3000);
                 delay(1000);
             }
-        }
-        else if (selection == 2) // the "start" menu item
-        {
-            if (button_up())
+            else if (selection == 2) // Download Profile
             {
-                button_debounce();
-                while (button_up());
-                button_debounce();
-                
+                profile.DownloadFromSerial();
+                profile.Save();
+            }
+            else if (selection == 3) // Upload Profile
+            {
+                profile.UploadToSerial();
+            }
+            else if (selection == 4) // the "start" menu item
+            {
                 fillScreen(bg);
                 
                 auto_go(&profile);
-                tone(BUZZER,NOTE_A4,3000);
                 // go back to home menu when finished
                 return;
             }
-        }
-        else if (selection == 3) // the "back to home menu" option
-        {
-            if (button_up())
+            else if (selection == 5) // the "back to home menu" option
             {
-                button_debounce();
-                while (button_up());
-                button_debounce();
-                
                 // go back to home menu
                 return;
             }
+            screen_dirty = 1;
         }
         
         if (button_mid())
@@ -677,7 +727,8 @@ void Menu::menu_auto_mode()
             button_debounce();
             
             // change selected menu item to the next one
-            selection = (selection + 1) % 4;
+            selection = (selection + 1) % 6;
+            screen_dirty = 1;
         }
     }
 }
@@ -685,169 +736,23 @@ void Menu::menu_auto_mode()
 void Menu::menu_edit_settings()
 {
     settings.Load(); // load from eeprom
-    
-    char selection = 0;
-    while(1)
-    {
-        element.set(0); // keep off for safety
-        
-        // draw LCD
-        fillScreen(bg);
-        for (int r = 0; r < LCD_ROWS; r++)
-        {
-            /*lcd_set_row_column(r, 0);*/
-            
-            // draw indicator beside the selected menu item
-            if (r - 2 == selection)
-            {
-                printat(r,0,'>');
-            }
-            else
-            {
-                if (r != 1)
-                {
-                    printat(r,0,' ');
-                }
-            }
-            
-            switch (r)
-            {
-            case 0:
-                // menu title
-                printlnat(r,1,"Edit Settings");
-                break;
-            case 1:
-                // draw a horizontal divider line across the screen
-                for (int c = 0; c < LCD_WIDTH; c++)
-                {
-                    printat(r,c,'\176');
-                }
-                break;
-                
-                // display info/submenu items
-            case 2:
-                printat(r,1,"PID P= ");
-                println(str_from_double(settings.pid_p, 2));
-                break;
-            case 3:
-                printat(r,1,"PID I= ");
-                println(str_from_double(settings.pid_i, 2));
-                break;
-            case 4:
-                printat(r,1,"PID D= ");
-                println(str_from_double(settings.pid_d, 2));
-                break;
-            case 5:
-                printat(r,1,"Max Temp= ");
-                print((uint16_t)lround(settings.max_temp));
-                println(" `C");
-                break;
-            case 6:
-                printat(r,1,"Time to Max= ");
-                print((uint16_t)lround(settings.time_to_max));
-                println(" s");
-                break;
-            case 7:
-                printlnat(r,1,"Reset to Defaults");
-                break;
-            case 8:
-                printlnat(r,1,"Back to Home Menu");
-            default:
-                break;
-            }
-        }
-        
-        // change value according to which value is selected and which button is pressed
-        switch(selection)
-        {
-        case 0:
-            settings.pid_p = button_change_double(settings.pid_p, 0.1, 0.0, 10000.0);
-            break;
-        case 1:
-            settings.pid_i = button_change_double(settings.pid_i, 0.01, 0.0, 10000.0);
-            break;
-        case 2:
-            settings.pid_d = button_change_double(settings.pid_d, 0.01, -10000.0, 10000.0);
-            break;
-        case 3:
-            settings.max_temp = button_change_double(settings.max_temp, 1.0, 200.0, 350.0);
-            break;
-        case 4:
-            settings.time_to_max = button_change_double(settings.time_to_max, 1.0, 0.0, 60*20);
-            break;
-        default:
-            // there's no need for button holding if it's in a non-value-changing menu item
-            button_held = 0;
-            break;
-        }
-        
-        if (selection == 5) // the "reset to default" menu item
-        {
-            if (button_up())
-            {
-                button_debounce();
-                while (button_up());
-                button_debounce();
-                
-                settings.Default();
-            }
-        }
-        else if (selection == 6) // the "back to home menu" option
-        {
-            if (button_up())
-            {
-                button_debounce();
-                while (button_up());
-                button_debounce();
-                
-                if (settings.Valid())
-                {
-                    settings.Save(); // save to eeprom
-                    
-                    // back to main menu
-                    return;
-                }
-                else
-                {
-                    fillScreen(bg);
-                    printlnat(0,0,"Error in Settings");
-                    tone(BUZZER,NOTE_GS3,3000);
-                    delay(1000);
-                }
-            }
-        }
-        
-        if (button_mid())
-        {
-            button_held = 0;
-            
-            button_debounce();
-            while (button_mid());
-            button_debounce();
-            
-            // change selected menu item to the next one
-            selection = (selection + 1) % 7;
-        }
-    }
-}
-
-void Menu::main()
-{
-    char selection = 0;
     char screen_dirty = 1;
     
+    char selection = 0;
     while(1)
     {
-        element.set(0); // turn off for safety
+        serialCheck("Edit Setting Menu",selection);
+
+        element.set(0); // keep off for safety
         
-        if (screen_dirty != 0) // only draw if required
-        {
+        if (screen_dirty) {
+            // draw LCD
             fillScreen(bg);
             for (int r = 0; r < LCD_ROWS; r++)
             {
                 /*lcd_set_row_column(r, 0);*/
                 
-                // draw a indicator beside the selected menu item
+                // draw indicator beside the selected menu item
                 if (r - 2 == selection)
                 {
                     printat(r,0,'>');
@@ -864,31 +769,210 @@ void Menu::main()
                 {
                 case 0:
                     // menu title
-                    printlnat(r,1,"Home Menu");
+                    printlnat(r,1,"Edit Settings");
                     break;
                 case 1:
-                    // this draws a horizontal divider line across the screen
+                    // draw a horizontal divider line across the screen
                     for (int c = 0; c < LCD_WIDTH; c++)
                     {
                         printat(r,c,'\176');
                     }
                     break;
                     
+                    // display info/submenu items
+                case 2:
+                    printat(r,1,"PID P= ");
+                    //println(str_from_double(settings.pid_p, 2));
+                    println(settings.pid_p);
+                    break;
+                case 3:
+                    printat(r,1,"PID I= ");
+                    //println(str_from_double(settings.pid_i, 2));
+                    println(settings.pid_i);
+                    break;
+                case 4:
+                    printat(r,1,"PID D= ");
+                    //println(str_from_double(settings.pid_d, 2));
+                    println(settings.pid_d);
+                    break;
+                case 5:
+                    printat(r,1,"Max Temp= ");
+                    print((uint16_t)lround(settings.max_temp));
+                    println(" `C");
+                    break;
+                case 6:
+                    printat(r,1,"Time to Max= ");
+                    print((uint16_t)lround(settings.time_to_max));
+                    println(" s");
+                    break;
+                case 7:
+                    printlnat(r,1,"Reset to Defaults");
+                    break;
+                case 8:
+                    printlnat(r,1,"Download Settings");
+                    break;
+                case 9:
+                    printlnat(r,1,"Upload Settings");
+                    break;
+                case 10:
+                    printlnat(r,1,"Back to Home Menu");
+                default:
+                    break;
+                }
+            }
+            screen_dirty = 0;
+        }
+        if (button_up())
+        {
+            button_debounce();
+            while (button_up());
+            button_debounce();
+            
+            // enter the submenu that is selected
+            
+            // change value according to which value is selected and which button is pressed
+            switch(selection)
+            {
+            case 0:
+                settings.pid_p = button_change_double(settings.pid_p, 0.1, 0.0, 10000.0);
+                break;
+            case 1:
+                settings.pid_i = button_change_double(settings.pid_i, 0.01, 0.0, 10000.0);
+                break;
+            case 2:
+                settings.pid_d = button_change_double(settings.pid_d, 0.01, -10000.0, 10000.0);
+                break;
+            case 3:
+                settings.max_temp = button_change_double(settings.max_temp, 1.0, 200.0, 350.0);
+                break;
+            case 4:
+                settings.time_to_max = button_change_double(settings.time_to_max, 1.0, 0.0, 60*20);
+                break;
+            default:
+                // there's no need for button holding if it's in a non-value-changing menu item
+                button_held = 0;
+                break;
+            }
+            
+            if (selection == 5) // the "reset to default" menu item
+            {
+                settings.Default();
+            }
+            else if (selection == 6) // Download Settings
+            {
+                settings.DownloadFromSerial();
+            }
+            else if (selection == 7) // Upload Settings
+            {
+                settings.UploadToSerial();
+            }
+            else if (selection == 8) // the "back to home menu" option
+            {
+                if (settings.Valid())
+                {
+                    settings.Save(); // save to eeprom
+                    printlnat(0,0,"Settings Saved");
+                    tone(BUZZER,NOTE_CS3,3000);
+                    delay(1000);
+                    // back to main menu
+                    return;
+                }
+                else
+                {
+                    fillScreen(bg);
+                    printlnat(0,0,"Error in Settings");
+                    tone(BUZZER,NOTE_GS3,3000);
+                    delay(1000);
+                }
+            }
+            screen_dirty = 1;
+        }
+        
+        if (button_mid())
+        {
+            button_held = 0;
+            
+            button_debounce();
+            while (button_mid());
+            button_debounce();
+            
+            // change selected menu item to the next one
+            selection = (selection + 1) % 9;
+            //Serial.print("***Selection = "); Serial.println((int)selection);
+            screen_dirty = 1;
+        }
+    }
+}
+
+void Menu::main()
+{
+    char selection = 0;
+    char screen_dirty = 1;
+    
+    while(1)
+    {
+        serialCheck("Main menu",selection);
+
+        element.set(0); // turn off for safety
+        
+        if (screen_dirty != 0) // only draw if required
+        {
+            fillScreen(bg);
+            for (int r = 0; r < LCD_ROWS; r++)
+            {
+                /*lcd_set_row_column(r, 0);*/
+                
+                // draw a indicator beside the selected menu item
+                if (r - 2 == selection)
+                {
+                    printat(r,0,'>');
+                    //Serial.print('>');
+                }
+                else
+                {
+                    if (r != 1)
+                    {
+                        printat(r,0,' ');
+                        //Serial.print(' ');
+                    }
+                }
+                
+                switch (r)
+                {
+                case 0:
+                    // menu title
+                    printlnat(r,1,"Home Menu");
+                    //Serial.println("Home Menu");
+                    break;
+                case 1:
+                    // this draws a horizontal divider line across the screen
+                    for (int c = 0; c < LCD_WIDTH; c++)
+                    {
+                        printat(r,c,'\176');
+                        //Serial.print('\176');
+                    }
+                    break;
+                    //Serial.println("");
                     // display submenu items
                 case 2:
                     printlnat(r,1,"Auto Mode");
+                    //Serial.println("Auto Mode");
                     break;
                 case 3:
                     printlnat(r,1,"Manual Temp Control");
+                    //Serial.println("Manual Temp Control");
                     break;
                 case 4:
                     printlnat(r,1,"Manual PWM Control");
+                    //Serial.println("Manual PWM Control");
                     break;
                 case 5:
                     printlnat(r,1,"Edit Settings");
+                    //Serial.println("Edit Settings");
                     break;
                 case 6:
                     printlnat(r,1,"Flash Filesystem Control");
+                    //Serial.println("Flash Filesystem Control");
                     break;
                 default:
                     /*lcd_clear_restofrow();*/
@@ -964,7 +1048,7 @@ void Menu::auto_go(profile_t* profile)
     
     // this will be used for many things later
     double max_heat_rate = settings.max_temp / settings.time_to_max;
-    
+    //printat(8,0,"*** max_heat_rate = ");println(max_heat_rate);
     // reset the graph
     for (int i = 0; i < LCD_WIDTH; i++)
     {
@@ -993,8 +1077,12 @@ void Menu::auto_go(profile_t* profile)
     double tgt_temp = sensor_to_temperature(sensor.read());
     double start_temp = tgt_temp;
     uint16_t cur_sensor = sensor.read();
+    bool done_buzzer = false;
+    Serial.println("AutoGoLOG>");
     while (1)
     {	
+        serialCheck("Auto mode go",stage);
+
         if (tmr_checktemp_flag)
         {
             tmr_checktemp_flag = 0;
@@ -1125,6 +1213,10 @@ void Menu::auto_go(profile_t* profile)
             element.set(pwm_ocr); // set the heating element power
             
             graph_timer += TMR_OVF_TIMESPAN * 256;
+            //printat(4,0,"*** graph_timer = "); println(graph_timer);
+            //printat(5,0,"*** graph_tick = "); println(graph_tick);
+            //printat(6,0,"*** total_duration = "); println(total_duration);
+            //printat(7,0,"*** LCD_WIDTH = "); println(LCD_WIDTH);
             
             if (stage != 5 && graph_timer >= graph_tick)
             {
@@ -1151,8 +1243,10 @@ void Menu::auto_go(profile_t* profile)
                 //temp_plan[temp_history_idx] = plan >= LCD_HEIGHT ? LCD_HEIGHT : (plan <= 0 ? 0 : plan);
                 
                 int32_t history = lround((sensor_to_temperature(cur_sensor) / settings.max_temp) * LCD_HEIGHT) - shiftdown;
+                //printat(8,0,"history=");println(history);
+                //printat(9,0,"temp_history_idx=");println(temp_history_idx);
                 temp_history[temp_history_idx] = history >= LCD_HEIGHT ? LCD_HEIGHT : (history <= 0 ? 0 : history);
-                
+                //printat(10,0,"stored:");println(temp_history[temp_history_idx]);
                 if (temp_history_idx < (LCD_WIDTH - 1) && (temp_history[temp_history_idx] != 0 /*|| temp_plan[temp_history_idx] != 0*/))
                 {
                     temp_history_idx++;
@@ -1222,11 +1316,12 @@ void Menu::auto_go(profile_t* profile)
             tmr_writelog_flag = 0;
             
             // print to CSV log format
-            Serial.print(stage); Serial.print(", ");
-            Serial.print(str_from_double(total_cnt * TMR_OVF_TIMESPAN * 256, 1)); Serial.print(", ");
+            Serial.print((int)stage); Serial.print(", ");
+            //Serial.print(str_from_double(total_cnt * TMR_OVF_TIMESPAN * 256, 1)); Serial.print(", ");
+            Serial.print(total_cnt * TMR_OVF_TIMESPAN * 256); Serial.print(", ");
             Serial.print(cur_sensor); Serial.print(", ");
             Serial.print(sensor.temperature_to_sensor(tgt_temp)); Serial.print(", ");
-            Serial.print(str_from_int(pwm_ocr)); Serial.print(", ");
+            Serial.println(str_from_int(pwm_ocr));
             //fprintf(&log_stream, "%s, ", str_from_int(pwm_ocr));
             //fprintf(&log_stream, "%s,\n", str_from_double(integral, 1));
         }
@@ -1251,9 +1346,14 @@ void Menu::auto_go(profile_t* profile)
             }
             else
             {
+                Serial.println("AutoGoLOG<");
                 // release and hold down again to exit
                 return;
             }
+        }
+        if (stage >= 5 && !done_buzzer) {
+            tone(BUZZER,NOTE_A4,3000);
+            done_buzzer = true;
         }
     }
 }
@@ -1271,121 +1371,172 @@ void Menu::draw_graph(void)
             text_end = max(text_end, FONT_WIDTH * strlen(&(graph_text[r*((LCD_WIDTH/FONT_WIDTH) + 2)])));
         }
     }
-        
-    for (int c = text_end; c < LCD_WIDTH; c++)
+    int rowtop = 4 * FONT_HEIGHT; // calculate actual y location based on row and 8 pixels per row
+    //printat(13,0,"text_end=");println(text_end);   
+    for (int c = 0; c < LCD_WIDTH; c++)
     {
         // flip the numbers because of y axis
         uint8_t history = LCD_HEIGHT - temp_history[c];
         //uint8_t plan = LCD_HEIGHT - temp_plan[c];
         
-        int rowtop = r * FONT_HEIGHT; // calculate actual y location based on row and 8 pixels per row
-        drawLine(c,0,c,history,graphcolor);
+        drawLine(c,LCD_HEIGHT,c,history,graphcolor);
+        //if (c < temp_history_idx) {
+        //    printat(4,0,"history=");println(history);
+        //    printat(5,0,"c=");println(c);
+        //    printat(6,0,"rowtop=");println(rowtop);
+        //    printat(7,0,"temp_history[c]="),println(temp_history[c]);
+        //}
     }
 }
     
 void Menu::menu_flash_filesystem()
 {
     char selection = 0;
+    char screen_dirty = 1;
     while(1)
     {
+        serialCheck("Flash FS Menu",selection);
+
         element.set(0); // keep off for safety
         // draw LCD
-        fillScreen(bg);
-        for (int r = 0; r < LCD_ROWS; r++)
+        if (screen_dirty != 0) // only draw if required
         {
-            /*lcd_set_row_column(r, 0);*/
-            // draw indicator beside the selected menu item
-            if (r - 2 == selection)
-            {
-                printat(r,0,'>');
-            }
-            else
-            {
-                if (r != 1)
-                {
-                    printat(r,0,' ');
-                }
-            }
-            
-            switch (r)
-            {
-            case 0:
-                // menu title
-                printlnat(r,1,"Flash Filesystem Functions");
-                break;
-            case 1:
-                // draw a horizontal divider line across the screen
-                for (int c = 0; c < LCD_WIDTH; c++)
-                {
-                    printat(r,c,'\176');
-                }
-                break;
-                
-                // display info/submenu items
-            case 2:
-                printlnat(r,1,"List");
-                break;
-            case 3:
-                printlnat(r,1,"Delete Settings.dat");
-                break;
-            case 4:
-                printlnat(r,1,"Delete Profile.dat");
-                break;
-            case 5:
-                printlnat(r,1,"Erase disk");
-                break;
-            case 6:
-                printlnat(r,1,"Back to Home Menu");
-                break;
-            default:
-                break;
-            }
-        }
-        
-        switch(selection)
-        {
-        case 0:
             fillScreen(bg);
-            printlnat(0,0,"Files on the disk");
-            current_row = 2;
-            filesystem.ListFiles(file_list_callback,this);
-            while (1) {
-                if (button_mid())
+            for (int r = 0; r < LCD_ROWS; r++)
+            {
+                /*lcd_set_row_column(r, 0);*/
+                // draw indicator beside the selected menu item
+                if (r - 2 == selection)
                 {
-                    button_held = 0;
-                    button_debounce();
-                    while (button_mid());
-                    button_debounce();
+                    printat(r,0,'>');
+                    //Serial.print('>');
+                }
+                else
+                {
+                    if (r != 1)
+                    {
+                        printat(r,0,' ');
+                        //Serial.print(' ');
+                    }
+                }
+            
+                switch (r)
+                {
+                case 0:
+                    // menu title
+                    printlnat(r,1,"Flash Filesystem Functions");
+                    //Serial.println("Flash Filesystem Functions");
+                    break;
+                case 1:
+                    // draw a horizontal divider line across the screen
+                    for (int c = 0; c < LCD_WIDTH; c++)
+                    {
+                        printat(r,c,'\176');
+                        //Serial.print('\176');
+                    }
+                    //Serial.println("");
+                    break;
+                
+                    // display info/submenu items
+                case 2:
+                    printlnat(r,1,"List");
+                    //Serial.println("List");
+                    break;
+                case 3:
+                    printlnat(r,1,"Delete Settings.dat");
+                    //Serial.println("Delete Settings.dat");
+                    break;
+                case 4:
+                    printlnat(r,1,"Delete Profile.dat");
+                    //Serial.println("Delete Profile.dat");
+                    break;
+                case 5:
+                    printlnat(r,1,"Erase disk");
+                    //Serial.println("Erase disk");
+                    break;
+                case 6:
+                    printlnat(r,1,"Back to Home Menu");
+                    //Serial.println("Back to Home Menu");
+                    break;
+#if 0
+                case 7:
+                    printlnat(r,1,"Dump Settings.dat to Serial");
+                    break;
+                case 8:
+                    printlnat(r,1,"Dump Profile.dat to serial");
+                    break;
+                case 9:
+                    printlnat(r,1,"List Settings.dat to Serial");
+                    break;
+                case 10:
+                    printlnat(r,1,"List Profile.dat to serial");
+                    break;
+#endif
+                default:
                     break;
                 }
+                screen_dirty = 0; // the screen is fresh 
             }
-            break;
-        case 1:
-            filesystem.DeleteFile("Settings.dat");
-            break;
-        case 2:
-            filesystem.DeleteFile("Profile.dat");
-            break;
-        case 3:
-            filesystem.EraseDisk();
-            break;
-        default:
-            // there's no need for button holding if it's in a non-value-changing menu item
-            button_held = 0;
-            break;
         }
-        
-        if (selection == 4) // the "back to home menu" option
+        if (button_up())
         {
-            if (button_up())
+            button_debounce();
+            while (button_up());
+            button_debounce();
+            //Serial.println("*** Up pushed in FS Menu");
+
+            switch(selection)
             {
-                button_debounce();
-                while (button_up());
-                button_debounce();
-                
+            case 0:
+                fillScreen(bg);
+                printlnat(0,0,"Files on the disk");
+                //Serial.println("Files on the disk");
+                current_row = 2;
+                filesystem.ListFiles(file_list_callback,this);
+                while (1) {
+                    if (button_up())
+                    {
+                        button_held = 0;
+                        button_debounce();
+                        while (button_up());
+                        button_debounce();
+                        break;
+                    }
+                }
+                break;
+            case 1:
+                filesystem.DeleteFile("Settings.dat");
+                break;
+            case 2:
+                filesystem.DeleteFile("Profile.dat");
+                break;
+            case 3:
+                filesystem.EraseDisk();
+                break;
+            case 4:
                 // back to main menu
                 return;
+#if 0
+            case 5:
+                filesystem.DumpToSerial("Settings.dat");
+                break;
+            case 6: 
+                filesystem.DumpToSerial("Profile.dat");
+                break;
+            case 7:
+                filesystem.ListToSerial("Settings.dat");
+                break;
+            case 8: 
+                filesystem.ListToSerial("Profile.dat");
+                break;
+#endif
+            default:
+                // there's no need for button holding if it's in a non-value-changing menu item
+                button_held = 0;
+                break;
             }
+            screen_dirty = 1;
+        
         }
         
         if (button_mid())
@@ -1395,9 +1546,15 @@ void Menu::menu_flash_filesystem()
             button_debounce();
             while (button_mid());
             button_debounce();
+            //Serial.println("*** Middle pushed in Flash FS Menu");
             
             // change selected menu item to the next one
+#if 0
+            selection = (selection + 1) % 9;
+#else
             selection = (selection + 1) % 5;
+#endif
+            screen_dirty = 1;
         }
     }
 }
@@ -1405,12 +1562,16 @@ void Menu::menu_flash_filesystem()
 void Menu::file_list(File file)
 {
     if (file.isDirectory()) {
-        printat(current_row,0,"d");
+        printat(current_row,0,'d');
+        //Serial.print('d');
     } else {
-        printat(current_row,0," ");
+        printat(current_row,0,' ');
+        //Serial.print(' ');
     }
     printat(current_row,3,str_from_int(file.size()));
-    printat(current_row,20,file.name());
+    //Serial.print("  "); Serial.print(str_from_int(file.size())); 
+    printat(current_row,10,file.name());
+    //Serial.print("  "); Serial.println(file.name());
     file.close();
     current_row++;
 }
