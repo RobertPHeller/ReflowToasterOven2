@@ -8,7 +8,7 @@
 #  Author        : $Author$
 #  Created By    : Robert Heller
 #  Created       : Fri Aug 10 11:03:32 2018
-#  Last Modified : <180810.1153>
+#  Last Modified : <180825.0948>
 #
 #  Description	
 #
@@ -56,6 +56,14 @@ snit::type ToasterConsole {
         Profile Profile.dat
         Settings Settings.dat
     }
+    typevariable defaultfilemap -array {
+        PWMLog ManualPWM.log
+        TempLOG ManualTemp.log
+        AutoGoLOG AutoGo.log
+        Profile Profile.dat
+        Settings Settings.dat
+    }
+    typevariable defaultport /dev/ttyACM0
     typevariable fp {}
     typevariable outfp {}
     typevariable infp {}
@@ -67,7 +75,12 @@ snit::type ToasterConsole {
         global argv
         global argv0
         global argc
-        set port [from argv -port /dev/ttyACM0]
+        set port [from argv -port $defaultport]
+        set filemap(PWMLog) [from argv -pwmlog $defaultfilemap(PWMLog)]
+        set filemap(TempLOG) [from argv -templog $defaultfilemap(TempLOG)]
+        set filemap(AutoGoLOG) [from argv -autogolog $defaultfilemap(AutoGoLOG)]
+        set filemap(Profile) [from argv -profile $defaultfilemap(Profile)]
+        set filemap(Settings) [from argv -settings $defaultfilemap(Settings)]
         set fp [open $port  w+]
         fconfigure $fp -mode 115200,n,8,2 -blocking no -buffering none \
               -handshake none -translation {crlf crlf}
