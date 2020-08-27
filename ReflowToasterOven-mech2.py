@@ -9,7 +9,7 @@
 #  Author        : $Author$
 #  Created By    : Robert Heller
 #  Created       : Mon Aug 24 11:24:56 2020
-#  Last Modified : <200826.1322>
+#  Last Modified : <200827.0902>
 #
 #  Description	
 #
@@ -60,6 +60,7 @@ from LargePiezo              import LargePiezo
 from D2425                   import D2425
 from ACPower                 import ACPowerEntry, ACReceptacle
 from HeatSink                import HeatSink, HeatSinkMain
+from ButtonBoard             import Button, ButtonBoard
 
 def MM2Mils(MM):
     return (MM/25.4)*1000
@@ -122,18 +123,24 @@ class ReflowToasterOvenControlBox(object):
         self.upperbox.cutlid(self.display.MountingHole(3,self.upperbox.TopZ,self.upperbox.WallThickness))
         self.upperbox.cutlid(self.display.MountingHole(4,self.upperbox.TopZ,self.upperbox.WallThickness))
         self.upperbox.cutlid(self.display.DisplayCutout(self.upperbox.TopZ,self.upperbox.WallThickness))
-        switchesZ = self.upperbox.TopZ
-        switchesHeight = self.upperbox.WallThickness
-        switchesX = displayX - 500
-        switch1Y  = boxLidCenterY + 750
-        switch2Y  = boxLidCenterY
-        switch3Y  = boxLidCenterY - 750
-        self.switch1 = PushButtonSwitchHole(Base.Vector(switchesX,switch1Y,switchesZ),height=switchesHeight)
-        self.switch2 = PushButtonSwitchHole(Base.Vector(switchesX,switch2Y,switchesZ),height=switchesHeight)
-        self.switch3 = PushButtonSwitchHole(Base.Vector(switchesX,switch3Y,switchesZ),height=switchesHeight)
-        self.upperbox.cutlid(self.switch1.Hole())
-        self.upperbox.cutlid(self.switch2.Hole())
-        self.upperbox.cutlid(self.switch3.Hole())
+        buttonBoardZ = self.upperbox.TopZ-(ButtonBoard._boardThick+\
+                                            Button._bodyheight)
+        buttonBoardY = boxLidCenterY -  (ButtonBoard._boardWidth/2.0)
+        buttonBoardX = displayX - 500 - (ButtonBoard._boardHeight/2.0)
+        self.buttonboard = ButtonBoard(name+"_buttonboard",\
+                                       Base.Vector(buttonBoardX,\
+                                                   buttonBoardY,\
+                                                   buttonBoardZ))
+        self.upperbox.cutlid(self.buttonboard.MountHole(1,self.upperbox.TopZ,\
+                                                  self.upperbox.WallThickness))
+        self.upperbox.cutlid(self.buttonboard.MountHole(2,self.upperbox.TopZ,\
+                                                  self.upperbox.WallThickness))
+        self.upperbox.cutlid(self.buttonboard.ButtonHole(1,self.upperbox.TopZ,\
+                                                  self.upperbox.WallThickness))
+        self.upperbox.cutlid(self.buttonboard.ButtonHole(2,self.upperbox.TopZ,\
+                                                  self.upperbox.WallThickness))
+        self.upperbox.cutlid(self.buttonboard.ButtonHole(3,self.upperbox.TopZ,\
+                                                  self.upperbox.WallThickness))
         buzzerorig = Base.Vector(self.upperbox.InsideFrontX+(MM2Mils(32)/2.0),\
                                  boxLidCenterY,\
                                  self.upperbox.TopZ)
@@ -224,6 +231,7 @@ class ReflowToasterOvenControlBox(object):
         self.acpowerentry.show()
         self.backrecept.show()
         self.heatsink.show()
+        self.buttonboard.show()
         doc = App.activeDocument()
         obj = doc.addObject("Part::Feature",self.name+"_board_standoff1")
         obj.Shape = self.board_standoff1
